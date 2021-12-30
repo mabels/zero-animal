@@ -12,7 +12,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
-	"k8s.io/apimachinery/pkg/types"
 
 	"k8s.io/client-go/rest"
 
@@ -24,14 +23,14 @@ import (
 const ApiVersion = "externaldns.k8s.io/v1alpha1"
 const Kind = "DNSEndpoint"
 
-type crdSource struct {
-	crdClient        rest.Interface
-	namespace        string
-	crdResource      string
-	codec            runtime.ParameterCodec
-	annotationFilter string
-	labelSelector    labels.Selector
-}
+// type crdSource struct {
+// 	crdClient        rest.Interface
+// 	namespace        string
+// 	crdResource      string
+// 	codec            runtime.ParameterCodec
+// 	annotationFilter string
+// 	labelSelector    labels.Selector
+// }
 
 func addKnownTypes(scheme *runtime.Scheme, groupVersion schema.GroupVersion) error {
 	scheme.AddKnownTypes(groupVersion,
@@ -42,65 +41,35 @@ func addKnownTypes(scheme *runtime.Scheme, groupVersion schema.GroupVersion) err
 	return nil
 }
 
-func (cs *crdSource) List(ctx context.Context, opts *metav1.ListOptions) (result *endpoint.DNSEndpointList, err error) {
-	result = &endpoint.DNSEndpointList{}
-	err = cs.crdClient.Get().
-		Namespace(cs.namespace).
-		Resource(cs.crdResource).
-		VersionedParams(opts, cs.codec).
-		Do(ctx).
-		Into(result)
-	return
-}
+// func (cs *crdSource) filterByAnnotations(dnsendpoints *endpoint.DNSEndpointList) (*endpoint.DNSEndpointList, error) {
+// 	labelSelector, err := metav1.ParseToLabelSelector(cs.annotationFilter)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	selector, err := metav1.LabelSelectorAsSelector(labelSelector)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-func (cs *crdSource) filterByAnnotations(dnsendpoints *endpoint.DNSEndpointList) (*endpoint.DNSEndpointList, error) {
-	labelSelector, err := metav1.ParseToLabelSelector(cs.annotationFilter)
-	if err != nil {
-		return nil, err
-	}
-	selector, err := metav1.LabelSelectorAsSelector(labelSelector)
-	if err != nil {
-		return nil, err
-	}
+// 	// empty filter returns original list
+// 	if selector.Empty() {
+// 		return dnsendpoints, nil
+// 	}
 
-	// empty filter returns original list
-	if selector.Empty() {
-		return dnsendpoints, nil
-	}
+// 	filteredList := endpoint.DNSEndpointList{}
 
-	filteredList := endpoint.DNSEndpointList{}
+// 	for _, dnsendpoint := range dnsendpoints.Items {
+// 		// convert the dnsendpoint' annotations to an equivalent label selector
+// 		annotations := labels.Set(dnsendpoint.Annotations)
 
-	for _, dnsendpoint := range dnsendpoints.Items {
-		// convert the dnsendpoint' annotations to an equivalent label selector
-		annotations := labels.Set(dnsendpoint.Annotations)
+// 		// include dnsendpoint if its annotations match the selector
+// 		if selector.Matches(annotations) {
+// 			filteredList.Items = append(filteredList.Items, dnsendpoint)
+// 		}
+// 	}
 
-		// include dnsendpoint if its annotations match the selector
-		if selector.Matches(annotations) {
-			filteredList.Items = append(filteredList.Items, dnsendpoint)
-		}
-	}
-
-	return &filteredList, nil
-}
-
-func (cs *crdSource) setResourceLabel(crd *endpoint.DNSEndpoint, endpoints []*endpoint.Endpoint) {
-	for _, ep := range endpoints {
-		ep.Labels[endpoint.ResourceLabelKey] = fmt.Sprintf("crd/%s/%s", crd.ObjectMeta.Namespace, crd.ObjectMeta.Name)
-	}
-}
-
-func (cs *crdSource) UpdateStatus(ctx context.Context, dnsEndpoint *endpoint.DNSEndpoint) (result *endpoint.DNSEndpoint, err error) {
-	result = &endpoint.DNSEndpoint{}
-	err = cs.crdClient.Put().
-		Namespace(dnsEndpoint.Namespace).
-		Resource(cs.crdResource).
-		Name(dnsEndpoint.Name).
-		SubResource("status").
-		Body(dnsEndpoint).
-		Do(ctx).
-		Into(result)
-	return
-}
+// 	return &filteredList, nil
+// }
 
 type ATypeEndPoints struct {
 	Name   string
@@ -145,6 +114,30 @@ func MakeDNSEndpointApi(cfg config.K8sCfg, k8sConfig *rest.Config) (*DNSEndpoint
 		cfg:        cfg,
 		scheme:     scheme,
 	}, nil
+}
+
+func (dn *DNSEndpointApi) List(opts *metav1.ListOptions) (result *endpoint.DNSEndpointList, err error) {
+	result = &endpoint.DNSEndpointList{}
+	err = dn.restClient.Get().
+		Namespace(dn.cfg.Namespace).
+		Resource(strings.ToLower(Kind) + "s").
+		// VersionedParams(opts, cs.codec).
+		Do(context.TODO()).
+		Into(result)
+	return
+}
+
+func (dn *DNSEndpointApi) GetEndpoint(name string) (*endpoint.DNSEndpoint, error) {
+	// var result runtime.Object
+	result := &endpoint.DNSEndpoint{}
+	err := dn.restClient.Get().
+		Namespace(dn.cfg.Namespace).
+		Resource(strings.ToLower(Kind) + "s").
+		Name(name).
+		Do(context.TODO()).
+		Into(result)
+	// log.Print(dn.cfg.Namespace, Kind, result)
+	return result, err
 }
 
 func (dn *DNSEndpointApi) DeleteEndpoint(name string) (runtime.Object, error) {
@@ -202,23 +195,20 @@ func (dn *DNSEndpointApi) PatchEndpoint(atyp ATypeEndPoints) (runtime.Object, er
 	if err != nil {
 		return nil, err
 	}
-	newEP := &endpoint.DNSEndpoint{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      strings.ReplaceAll(atyp.Name, ".", "-"),
-			Namespace: dn.cfg.Namespace,
-			Labels:    dn.cfg.Labels,
-		},
-		Spec: endpoint.DNSEndpointSpec{
-			Endpoints: eps,
-		},
+
+	name := strings.ReplaceAll(atyp.Name, ".", "-")
+	ep, err := dn.GetEndpoint(name)
+	if err != nil {
+		return ep, err
 	}
+	ep.Spec.Endpoints = eps
 	var result runtime.Object
-	err = dn.restClient.Patch(types.MergePatchType).
+	err = dn.restClient.Put().
 		Namespace(dn.cfg.Namespace).
 		Resource(strings.ToLower(Kind) + "s").
-		Name(newEP.ObjectMeta.Name).
+		Name(name).
 		// SubResource("status").
-		Body(newEP).
+		Body(ep).
 		Do(context.TODO()).
 		Into(result)
 	// log.Print(dn.cfg.Namespace, Kind, result)
@@ -260,16 +250,16 @@ func (dn *DNSEndpointApi) ReadEndPoints() (*endpoint.DNSEndpointList, error) {
 		return nil, err
 	}
 
-	crdSource := &crdSource{
-		crdResource:      strings.ToLower(Kind) + "s",
-		namespace:        dn.cfg.Namespace,
-		annotationFilter: dn.cfg.AnnotationFilter,
-		labelSelector:    labelSelector,
-		crdClient:        dn.restClient,
-		codec:            runtime.NewParameterCodec(dn.scheme),
-	}
+	// crdSource := &crdSource{
+	// 	crdResource:      strings.ToLower(Kind) + "s",
+	// 	namespace:        dn.cfg.Namespace,
+	// 	annotationFilter: dn.cfg.AnnotationFilter,
+	// 	labelSelector:    labelSelector,
+	// 	crdClient:        dn.restClient,
+	// 	codec:            runtime.NewParameterCodec(dn.scheme),
+	// }
 
-	eps, err := crdSource.List(context.TODO(), &metav1.ListOptions{LabelSelector: crdSource.labelSelector.String()})
+	eps, err := dn.List(&metav1.ListOptions{LabelSelector: labelSelector.String()})
 	return eps, err
 
 }

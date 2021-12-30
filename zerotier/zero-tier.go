@@ -40,7 +40,9 @@ func (zt *ZeroTier) NetworkMember(net string) ([]Member, error) {
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("Authorization", fmt.Sprintf("bearer %s", zt.Bearer))
+	if len(zt.Bearer) > 0 {
+		req.Header.Add("Authorization", fmt.Sprintf("bearer %s", zt.Bearer))
+	}
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {

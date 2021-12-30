@@ -95,6 +95,10 @@ func main() {
 
 	flag.Parse()
 
+	if len(ztconfig.ZeroTier.Networks) == 0 {
+		klog.Fatalln("We need atleast one network set")
+	}
+
 	zt := zerotier.MakeZeroTier(ztconfig.ZeroTier.ZeroTier)
 	members, err := zt.NetworkMember(ztconfig.ZeroTier.Networks[0])
 	if err != nil {
@@ -170,12 +174,12 @@ func main() {
 			if both.equal() {
 			} else {
 				klog.Info("K8S-Update:", both.Key, both.zeroTierIps())
-				_, err := dn.PatchEndpoint(k8s.ATypeEndPoints{
+				result, err := dn.PatchEndpoint(k8s.ATypeEndPoints{
 					Name:   both.Key,
 					ATypes: both.zeroTierIps(),
 				})
 				if err != nil {
-					klog.Fatal(err)
+					klog.Fatal(err, result)
 				}
 			}
 		}
