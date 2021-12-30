@@ -2,7 +2,9 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
+	"path"
 	"sort"
 	"strings"
 
@@ -86,6 +88,9 @@ func (bs *BothSides) equal() bool {
 	return true
 }
 
+var version = "develop"
+var commit = "unknown"
+
 func main() {
 
 	klog.InitFlags(nil)
@@ -95,8 +100,14 @@ func main() {
 
 	flag.Parse()
 
+	if ztconfig.Version {
+		fmt.Printf("%s: %s-%s\n", path.Base(os.Args[0]), version, commit)
+		return
+	}
+
 	if len(ztconfig.ZeroTier.Networks) == 0 {
-		klog.Fatalln("We need atleast one network set")
+		klog.Errorln("We need atleast one network set")
+		return
 	}
 
 	zt := zerotier.MakeZeroTier(ztconfig.ZeroTier.ZeroTier)

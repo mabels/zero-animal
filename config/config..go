@@ -24,6 +24,7 @@ type K8sCfg struct {
 }
 
 type Config struct {
+	Version  bool
 	ZeroTier ZeroTierCfg
 	K8s      K8sCfg
 }
@@ -55,8 +56,9 @@ func (i *mapFlags) Set(value string) error {
 	return nil
 }
 
-func MakeConfig(args []string) Config {
+func MakeConfig(args []string) *Config {
 	cfg := Config{
+		Version: false,
 		ZeroTier: ZeroTierCfg{
 			ZeroTier: zerotier.ZeroTier{
 				Host:   "my.zerotier.com",
@@ -85,6 +87,7 @@ func MakeConfig(args []string) Config {
 			cfg.ZeroTier.Networks = append(cfg.ZeroTier.Networks, net)
 		}
 	}
+	flag.BoolVar(&cfg.Version, "version", false, "display version")
 
 	flag.StringVar(&cfg.ZeroTier.Host, "zeroTierHost", cfg.ZeroTier.Host, "ZeroTier API Host")
 	flag.StringVar(&cfg.ZeroTier.Bearer, "zeroTierBearer", bearer, "ZeroTier API Bearer[ZERO_TIER_BEARER]")
@@ -96,5 +99,5 @@ func MakeConfig(args []string) Config {
 	flag.StringVar(&cfg.K8s.AnnotationFilter, "k8sAnnotationFilter", cfg.K8s.AnnotationFilter, "AnnotationFilter")
 	flag.StringVar(&cfg.K8s.LabelFilter, "k8sLabelFilter", cfg.K8s.LabelFilter, "LabelFilter")
 	flag.Var(&cfg.K8s.Labels, "k8sLabels", "K8s Labels")
-	return cfg
+	return &cfg
 }
