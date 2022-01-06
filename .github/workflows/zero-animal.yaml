@@ -39,25 +39,25 @@ jobs:
       - name: Dockerei
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run:
-          - echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u mabels --password-stdin
-          - export VERSION=$(basename ${{ github.ref }})
-	  - cp ./dist/zero-animal_linux_arm64/zero-animal .
-	  - docker build --no-cache -t zero-animal:arm64-${{ github.sha }} . --platform=linux/arm64/v8 
-          - docker tag zero-animal:arm64-${{ github.sha }} ghcr.io/mabels/zero-animal:arm64-${{ github.sha }}
-          - docker push ghcr.io/mabels/zero-animal:arm64-${{ github.sha }}
-          - docker tag zero-animal:arm64-$VERSION ghcr.io/mabels/zero-animal:arm64-$VERSION
-          - docker push ghcr.io/mabels/zero-animal:arm64-$VERSION
-	  - cp ./dist/zero-animal_linux_arm_7/zero-animal .
-	  - docker build --no-cache -t zero-animal:armv7 . --platform=linux/arm/v7 
-          - docker tag zero-animal:armv7-${{ github.sha }} ghcr.io/mabels/zero-animal:armv7-${{ github.sha }}
-          - docker push ghcr.io/mabels/zero-animal:armv7-${{ github.sha }}
-          - docker tag zero-animal:armv7-$VERSION ghcr.io/mabels/zero-animal:armv7-$VERSION
-          - docker push ghcr.io/mabels/zero-animal:armv7-$VERSION
-	  - cp ./dist/zero-animal_linux_amd64/zero-animal .
-	  - docker build --no-cache -t zero-animal:amd64 . --platform=linux/amd64
-          - docker tag zero-animal:amd64-${{ github.sha }} ghcr.io/mabels/zero-animal:amd64-${{ github.sha }}
-          - docker push ghcr.io/mabels/zero-animal:amd64-${{ github.sha }}
-          - docker tag zero-animal:amd64-$VERSION ghcr.io/mabels/zero-animal:amd64-$VERSION
-          - docker push ghcr.io/mabels/zero-animal:amd64-$VERSION
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u mabels --password-stdin
+          export VERSION=$(basename ${{ github.ref }})
+	  cp ./dist/zero-animal_linux_arm64/zero-animal .
+	  docker build --no-cache -t zero-animal:arm64-${{ github.sha }} . --platform=linux/arm64/v8 
+          docker tag zero-animal:arm64-${{ github.sha }} ghcr.io/mabels/zero-animal:arm64-${{ github.sha }}
+          docker push ghcr.io/mabels/zero-animal:arm64-${{ github.sha }}
+          ocker tag zero-animal:arm64-$VERSION ghcr.io/mabels/zero-animal:arm64-$VERSION
+          docker push ghcr.io/mabels/zero-animal:arm64-$VERSION
+	  cp ./dist/zero-animal_linux_arm_7/zero-animal .
+	  docker build --no-cache -t zero-animal:armv7 . --platform=linux/arm/v7 
+          docker tag zero-animal:armv7-${{ github.sha }} ghcr.io/mabels/zero-animal:armv7-${{ github.sha }}
+          docker push ghcr.io/mabels/zero-animal:armv7-${{ github.sha }}
+          docker tag zero-animal:armv7-$VERSION ghcr.io/mabels/zero-animal:armv7-$VERSION
+          docker push ghcr.io/mabels/zero-animal:armv7-$VERSION
+	  cp ./dist/zero-animal_linux_amd64/zero-animal .
+	  docker build --no-cache -t zero-animal:amd64 . --platform=linux/amd64
+          docker tag zero-animal:amd64-${{ github.sha }} ghcr.io/mabels/zero-animal:amd64-${{ github.sha }}
+          docker push ghcr.io/mabels/zero-animal:amd64-${{ github.sha }}
+          docker tag zero-animal:amd64-$VERSION ghcr.io/mabels/zero-animal:amd64-$VERSION
+          docker push ghcr.io/mabels/zero-animal:amd64-$VERSION
 
