@@ -72,7 +72,7 @@ jobs:
           docker manifest annotate ghcr.io/mabels/zero-animal:$VERSION \
              ghcr.io/mabels/zero-animal:armv7-$VERSION --arch arm --variant v7
           docker manifest annotate ghcr.io/mabels/zero-animal:$VERSION \
-             ghcr.io/mabels/zero-animal:arm64-$VERSION --arch arm64 --varient v8
+             ghcr.io/mabels/zero-animal:arm64-$VERSION --arch arm64 --variant v8
           docker manifest push ghcr.io/mabels/zero-animal:$VERSION
 
 #manifests:
