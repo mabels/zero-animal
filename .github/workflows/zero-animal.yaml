@@ -15,6 +15,8 @@ jobs:
     name: Build ${{ join(matrix.platform, ',') }} zero-animal
     steps:
       - uses: actions/checkout@v2
+        with:
+         fetch-depth: 30
 
       - name: Set up Go
         uses: actions/setup-go@v2
@@ -44,10 +46,11 @@ jobs:
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u mabels --password-stdin
           export VERSION=$(basename ${{ github.ref }})
-          find . -type d
           cp ./dist/zero-animal_linux_arm64/zero-animal .
+          export BUILDPLATFORM=$(python platform.py linux/arm64)
+          echo "BUILDPLATFORM="$BUILDPLATFORM
           docker build --no-cache -t zero-animal:arm64-${{ github.sha }} --platform linux/arm64 \
-            --build-arg BUILDPLATFORM=$(python platform.py linux/arm64)  .
+            --build-arg BUILDPLATFORM=$BUILDPLATFORM .
           docker tag zero-animal:arm64-${{ github.sha }} ghcr.io/mabels/zero-animal:arm64-${{ github.sha }}
           docker push ghcr.io/mabels/zero-animal:arm64-${{ github.sha }}
           docker tag zero-animal:arm64-${{ github.sha }} ghcr.io/mabels/zero-animal:arm64-$VERSION
