@@ -4,7 +4,7 @@ before:
 builds:
   - env:
       - CGO_ENABLED=0
-    id: "neckless"
+    id: "zero-animal"
     ldflags:
       - "-s -w -X main.Version='$(.Env.VERSION)' -X main.GitCommit=$(.Env.GITCOMMIT)"
     goos:
@@ -29,7 +29,7 @@ builds:
         goarch: arm
 
     main: ./
-    binary: neckless
+    binary: zero-animal
     tags:
       - release
 archives:
@@ -39,7 +39,7 @@ archives:
       windows: Windows
       386: i386
       amd64: x86_64
-    name_template: "neckless_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ .Arm }}"
+    name_template: "zero-animal_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ .Arm }}"
 checksum:
   name_template: 'checksums.txt'
 snapshot:

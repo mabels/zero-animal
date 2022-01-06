@@ -1,14 +1,5 @@
-FROM golang:1.17-alpine
-
-ARG VERSION
-ARG COMMIT
-
-RUN apk add make gcc libc-dev
-COPY . /build
-RUN cd /build && make release VERSION=$VERSION GITCOMMIT=$COMMIT
-
-FROM alpine:latest
-
-COPY --from=0 /build/s3-streaming-lister /usr/local/bin/s3-streaming-lister
-
-CMD ["/usr/local/bin/s3-streaming-lister"] 
+FROM alpine
+#ARG BINARY_PATH
+#COPY $BINARY_PATH /usr/bin/zero-animal
+COPY ./zero-animal /usr/bin/zero-animal
+ENTRYPOINT ["/usr/bin/zero-animal"]
