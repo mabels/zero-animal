@@ -48,7 +48,7 @@ jobs:
           docker build --no-cache -t zero-animal:arm64-${{ github.sha }} . --platform=linux/arm64/v8 
           docker tag zero-animal:arm64-${{ github.sha }} ghcr.io/mabels/zero-animal:arm64-${{ github.sha }}
           docker push ghcr.io/mabels/zero-animal:arm64-${{ github.sha }}
-          ocker tag zero-animal:arm64-$VERSION ghcr.io/mabels/zero-animal:arm64-$VERSION
+          docker tag zero-animal:arm64-$VERSION ghcr.io/mabels/zero-animal:arm64-$VERSION
           docker push ghcr.io/mabels/zero-animal:arm64-$VERSION
           cp ./dist/zero-animal_linux_arm_7/zero-animal .
           docker build --no-cache -t zero-animal:armv7 . --platform=linux/arm/v7 
