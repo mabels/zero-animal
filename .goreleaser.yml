@@ -9,9 +9,9 @@ builds:
       - "-s -w -X main.Version='$(.Env.VERSION)' -X main.GitCommit=$(.Env.GITCOMMIT)"
     goos:
       - linux
-      - freebsd
       - windows
       - darwin
+    #  - freebsd
     goarch:
       - arm
       - amd64
